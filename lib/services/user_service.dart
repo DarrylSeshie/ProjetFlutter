@@ -1,14 +1,16 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/user.dart';
 
+// Stockage sécurisé du token
+final FlutterSecureStorage _storage = FlutterSecureStorage();
 
 class UtilisateurService {
-  final String apiUrl = 'http://10.0.2.2:5053/api/Utilisateurs';
-  final String loginUrl = 'http://10.0.2.2:5053/login';
+  final String apiUrl = 'http://192.168.56.1:5053/api/Utilisateurs';
+  final String loginUrl = 'http://192.168.56.1:5053/login';
 
-
-  // Méthode pour envoyer une requête de connexion avec multipart/form-data
+  // Méthode de connexion
   Future<String> login(String email, String password) async {
     var request = http.MultipartRequest('POST', Uri.parse(loginUrl));
     request.fields['email'] = email;
@@ -16,12 +18,14 @@ class UtilisateurService {
 
     try {
       var response = await request.send();
-      print('Response status code: ${response.statusCode}');
       if (response.statusCode == 200) {
         var responseData = await response.stream.bytesToString();
         print('Response data: $responseData');
-        var jsonResponse = json.decode(responseData);
-        return jsonResponse['token']; // Suppose que la réponse contient un token
+
+        // Stockage du token
+        await _storage.write(key: 'token', value: responseData);
+        print('Token stocké avec succès');
+        return responseData;
       } else {
         throw Exception('Erreur lors de la connexion : ${response.statusCode}');
       }
@@ -31,82 +35,138 @@ class UtilisateurService {
   }
 
 
-  // Méthode pour récupérer tous les utilisateurs
-  Future<List<Utilisateur>> fetchUtilisateurs(String token) async {
-    final response = await http.get(
-      Uri.parse(apiUrl),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-    );
-
-    if (response.statusCode == 200) {
-      List<dynamic> data = json.decode(response.body);
-      return data.map((json) => Utilisateur.fromJson(json)).toList();
-    } else {
-      throw Exception('Une erreur est survenue lors du chargement des utilisateurs');
-    }
-  }
-
   // Méthode pour créer un nouvel utilisateur
   Future<void> createUtilisateur(Utilisateur utilisateur) async {
-    final response = await http.post(
-      Uri.parse(apiUrl),
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode(utilisateur.toJson()),
-    );
+    String? token = await _storage.read(key: 'token');
+    if (token == null) {
+      throw Exception('Token non disponible. Veuillez vous connecter.');
+    }
 
-    if (response.statusCode != 201) {
-      throw Exception('Erreur lors de la création de l\'utilisateur');
+    try {
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: json.encode(utilisateur.toJson()),
+      );
+
+      if (response.statusCode != 201) {
+        throw Exception('Erreur lors de la création de l\'utilisateur : ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Erreur lors de la création de l\'utilisateur : $e');
     }
   }
 
-  // Méthode pour récupérer un utilisateur par ID
-  Future<Utilisateur> fetchUtilisateurById(String token, int id) async {
-    final response = await http.get(
-      Uri.parse('$apiUrl/$id'),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-    );
 
-    if (response.statusCode == 200) {
-      return Utilisateur.fromJson(json.decode(response.body));
-    } else {
-      throw Exception('Erreur lors de la récupération de l\'utilisateur');
+  // Méthode pour récupérer tous les utilisateurs avec token
+  Future<List<Utilisateur>> fetchUtilisateurs() async {
+    // Récupérer le token stocké
+    String? token = await _storage.read(key: 'token');
+    if (token == null) {
+      throw Exception('Token non disponible. Veuillez vous connecter.');
+    }
+
+    try {
+      final response = await http.get(
+        Uri.parse(apiUrl),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        List<dynamic> data = json.decode(response.body);
+        return data.map((json) => Utilisateur.fromJson(json)).toList();
+      } else if (response.statusCode == 401) {
+        throw Exception('Non autorisé : le token est peut-être invalide ou expiré.');
+      } else {
+        throw Exception('Erreur lors du chargement des utilisateurs : ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Erreur lors de la récupération des utilisateurs : $e');
     }
   }
 
-  // Méthode pour mettre à jour un utilisateur existant
-  Future<void> updateUtilisateur(String token, int id, Utilisateur utilisateur) async {
-    final response = await http.put(
-      Uri.parse('$apiUrl/$id'),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-      body: json.encode(utilisateur.toJson()),
-    );
+  // Méthode pour récupérer un utilisateur par ID avec token
+  Future<Utilisateur> fetchUtilisateurById(int id) async {
+    String? token = await _storage.read(key: 'token');
+    if (token == null) {
+      throw Exception('Token non disponible. Veuillez vous connecter.');
+    }
 
-    if (response.statusCode != 204) {
-      throw Exception('Erreur lors de la mise à jour de l\'utilisateur');
+    try {
+      final response = await http.get(
+        Uri.parse('$apiUrl/$id'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return Utilisateur.fromJson(json.decode(response.body));
+      } else if (response.statusCode == 404) {
+        throw Exception('Utilisateur non trouvé');
+      } else if (response.statusCode == 401) {
+        throw Exception('Non autorisé : le token est peut-être invalide ou expiré.');
+      } else {
+        throw Exception('Erreur lors de la récupération de l\'utilisateur : ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Erreur lors de la récupération de l\'utilisateur : $e');
     }
   }
 
-  // Méthode pour supprimer un utilisateur par ID
-  Future<void> deleteUtilisateur(String token, int id) async {
-    final response = await http.delete(
-      Uri.parse('$apiUrl/$id'),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-    );
+  // Méthode pour mettre à jour un utilisateur
+  Future<void> updateUtilisateur(int id, Utilisateur utilisateur) async {
+    String? token = await _storage.read(key: 'token');
+    if (token == null) {
+      throw Exception('Token non disponible. Veuillez vous connecter.');
+    }
 
-    if (response.statusCode != 204) {
-      throw Exception('Erreur lors de la suppression de l\'utilisateur');
+    try {
+      final response = await http.put(
+        Uri.parse('$apiUrl/$id'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: json.encode(utilisateur.toJson()),
+      );
+
+      if (response.statusCode != 204) {
+        throw Exception('Erreur lors de la mise à jour de l\'utilisateur : ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Erreur lors de la mise à jour de l\'utilisateur : $e');
+    }
+  }
+
+  // Méthode pour supprimer un utilisateur
+  Future<void> deleteUtilisateur(int id) async {
+    String? token = await _storage.read(key: 'token');
+    if (token == null) {
+      throw Exception('Token non disponible. Veuillez vous connecter.');
+    }
+
+    try {
+      final response = await http.delete(
+        Uri.parse('$apiUrl/$id'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode != 204) {
+        throw Exception('Erreur lors de la suppression de l\'utilisateur : ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Erreur lors de la suppression de l\'utilisateur : $e');
     }
   }
 }

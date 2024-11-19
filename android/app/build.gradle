@@ -1,14 +1,13 @@
 plugins {
     id "com.android.application"
     id "kotlin-android"
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
+    // Flutter Gradle Plugin
     id "dev.flutter.flutter-gradle-plugin"
 }
 
 android {
     namespace = "be.helha.projet_mobile_user"
-    compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    compileSdkVersion 33 // Assure-toi d'utiliser une version valide (par exemple, 33 pour Android 13)
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
@@ -16,25 +15,22 @@ android {
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8
+        jvmTarget = "1.8"
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "be.helha.projet_mobile_user"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
+        minSdkVersion 21 // Spécifie explicitement la version minimale du SDK
+        targetSdkVersion 33 // Spécifie explicitement la version cible du SDK
+        versionCode 1 // Remplace par le code de version actuel
+        versionName "1.0" // Remplace par la version actuelle
     }
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.debug
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
         }
     }
 }

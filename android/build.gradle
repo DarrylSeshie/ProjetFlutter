@@ -1,3 +1,14 @@
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:7.0.2' // Utilise une version compatible de Gradle Plugin
+        // Ajoute ici toute autre dépendance nécessaire pour ton projet
+    }
+}
+
 allprojects {
     repositories {
         google()
