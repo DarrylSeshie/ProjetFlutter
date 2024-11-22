@@ -31,9 +31,9 @@ dependencies:
   flutter:
     sdk: flutter
   http: ^1.2.2 #import du package http
-  #shared_preferences: ^2.3.3
   jwt_decoder: ^2.0.1
   flutter_secure_storage: ^5.0.2 # Pour stocker le token de façon sécurisée
+  intl: ^0.17.0
 
 
 
@@ -64,6 +64,9 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+  assets:
+    - assets/images/
+
 
   # To add assets to your application, add an assets section, like this:
   # assets:
