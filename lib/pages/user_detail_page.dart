@@ -44,9 +44,12 @@ class UserDetailPage extends StatelessWidget {
             Center(
               child: CircleAvatar(
                 radius: 50,
-                backgroundImage: utilisateur.photo != null
+                backgroundImage: (utilisateur.photo != null && utilisateur.photo != 'no-Image')
                     ? NetworkImage(utilisateur.photo!)
                     : AssetImage('assets/images/default_avatar.png') as ImageProvider,
+                onBackgroundImageError: (exception, stackTrace) {
+
+                },
               ),
             ),
             SizedBox(height: 20),

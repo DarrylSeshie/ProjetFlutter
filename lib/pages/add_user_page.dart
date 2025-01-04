@@ -67,6 +67,7 @@ class _AddUserPageState extends State<AddUserPage> {
         role: _selectedRole,
         point: int.tryParse(_pointController.text) ?? 0, // Conversion sécurisée en entier
         dateDeNaissance: _selectedDate,
+          photo: 'no-Image',
       );
 
       try {

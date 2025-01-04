@@ -7,6 +7,9 @@ import '../models/user.dart';
 final FlutterSecureStorage _storage = FlutterSecureStorage();
 
 class UtilisateurService {
+ // final String apiUrl = 'http://192.168.129.128:5053/api/Utilisateurs';
+  //final String loginUrl = 'http://192.168.129.128:5053/login';
+
   final String apiUrl = 'http://192.168.56.1:5053/api/Utilisateurs';
   final String loginUrl = 'http://192.168.56.1:5053/login';
 

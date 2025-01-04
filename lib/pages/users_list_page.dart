@@ -34,7 +34,7 @@ class _UsersListPageState extends State<UsersListPage> {
     } catch (e) {
       print('Erreur lors de la récupération du nom de l\'utilisateur : $e');
       setState(() {
-        userName = 'Utilisateur';
+        userName = 'Inconnu';
       });
     }
   }
@@ -146,9 +146,12 @@ class _UsersListPageState extends State<UsersListPage> {
                   margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                   child: ListTile(
                     leading: CircleAvatar(
-                      backgroundImage: utilisateur.photo != null
+                      backgroundImage: (utilisateur.photo != null && utilisateur.photo != 'no-Image')
                           ? NetworkImage(utilisateur.photo!)
                           : AssetImage('assets/images/default_avatar.png') as ImageProvider,
+                      onBackgroundImageError: (exception, stackTrace) {
+                        // Optionnel : Vous pouvez loguer l'erreur ou mettre à jour l'état pour afficher l'image par défaut
+                      },
                     ),
                     title: Text(utilisateur.nom ?? 'Sans nom'),
                     subtitle: Text(utilisateur.email),

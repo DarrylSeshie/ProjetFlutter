@@ -56,6 +56,7 @@ class _RegisterPageState extends State<RegisterPage> {
         dateDeNaissance: _selectedDate,
         role: 'User', // Valeur par défaut
         point: 0, // Valeur par défaut
+        photo: 'no-Image'
       );
 
       try {

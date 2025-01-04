@@ -34,6 +34,7 @@ dependencies:
   jwt_decoder: ^2.0.1
   flutter_secure_storage: ^5.0.2 # Pour stocker le token de façon sécurisée
   intl: ^0.17.0
+  flutter_native_splash: ^2.2.19
 
 
 
